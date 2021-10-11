@@ -1,0 +1,22 @@
+.parent {
+  position: fixed;
+  bottom: 0;
+  z-index: 2;
+  align-self: flex-end;
+  box-sizing: border-box;
+  display: flex;
+  width: 100vw;
+  padding: 5px 30px;
+}
+.menu {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: auto auto;
+  width: 100vw;
+  max-width: 500px;
+}
+.icon {
+  font-size: 28px;
+  cursor: pointer;
+}
