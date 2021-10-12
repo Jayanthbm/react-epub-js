@@ -1,355 +1,361 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ReactEpubViewer } from 'react-epub-viewer';
-import BottomBar from './BottomBar/BottomBar';
+import { ReactReader, ReactReaderStyle } from 'react-reader';
+import { IoArrowBack, IoArrowForward } from 'react-icons/io5';
+import { IoVolumeOff } from 'react-icons/io5';
+import { MdTranslate } from 'react-icons/md';
+import { VscSaveAs } from 'react-icons/vsc';
+
+import { Modal } from 'react-responsive-modal';
+import axios from 'axios';
+import '../../node_modules/react-responsive-modal/styles.css';
+import Loader from 'react-loader-spinner';
+import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
+import useWindowDimensions from '../hooks/useWindowDimensions';
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
+const loc = null;
+const ownStyles = {
+  ...ReactReaderStyle,
+  arrow: {
+    display: 'none',
+  },
+};
+const SINGLE_WORD = 'http://18.216.248.41/api/v1/word/single/words';
 const Reader = () => {
+  const { width } = useWindowDimensions();
   const [tmpUrl, setTmpUrl] = useState('');
+  const [selections, setSelections] = useState([]);
+  const renditionRef = useRef(null);
+  const tocRef = useRef(null);
   let query = useQuery();
   const [URL, setURL] = useState(query.get('url'));
-  const viewerRef = useRef(null);
-  const rendiRef = useRef(null);
-  const [rendition, setRendition] = useState(null);
-  const [scroll, setScroll] = useState(false);
-  const [page, setPage] = useState({
-    current: 0,
-    total: 0,
-    cfi: '',
-    percentage: 0,
-  });
-  const [config, setConfig] = useState({
-    fontSize: 16,
-    color: '',
-    bg: '',
-  });
-  const [load, setLoad] = useState(false);
+  const TOKEN = query.get('token');
+  const [location, setLocation] = useState(loc);
+
+  const [page, setPage] = useState('');
+  const locationChanged = (epubcifi) => {
+    try {
+      setLocation(epubcifi);
+      const { displayed, href } = renditionRef.current.location.start;
+      const chapter = tocRef.current.find((item) => item.href === href);
+      setPage(
+        `Page ${displayed.page} of ${displayed.total} ${
+          chapter ? 'in chapter' + chapter.label : ''
+        }`
+      );
+    } catch (error) {}
+  };
+
+  const [size, setSize] = useState(100);
+  const changeSize = (newSize) => {
+    setSize(newSize);
+  };
+
   useEffect(() => {
-    const disableContextMenu = () => {
-      let iframeBody = document.getElementsByTagName('iframe');
-      for (var i = 0, len = iframeBody.length; i < len; i++) {
-        var taskItem = iframeBody[i];
-        taskItem.contentWindow &&
-          taskItem.contentWindow.addEventListener(
-            'contextmenu',
-            // eslint-disable-next-line no-loop-func
-            function (e) {
-              e.preventDefault();
-              e.stopPropagation();
-            },
-            false
-          );
+    try {
+      if (renditionRef.current) {
+        renditionRef.current.themes.fontSize(`${size}%`);
       }
-    };
-    if (load === false) {
-      disableContextMenu();
-    }
-    // eslint-disable-next-line
-  }, [load]);
+    } catch (error) {}
+  }, [size]);
+
+  // eslint-disable-next-line no-unused-vars
+  const [darkmode, setDarkmode] = useState(false);
 
   useEffect(() => {
-    if (rendiRef.current) {
-      if (scroll === true) {
-        rendiRef.current.flow('scrolled');
-      } else {
-        rendiRef.current.flow('paginated');
+    try {
+      if (renditionRef.current) {
+        renditionRef.current.themes.register('theme', {
+          body: {
+            color: darkmode ? '#fff' : '#000',
+            background: darkmode ? '#000' : '#fff',
+          },
+        });
+        renditionRef.current.themes.select('theme');
       }
-    }
-    // eslint-disable-next-line
-  }, [scroll]);
+    } catch (error) {}
+  }, [darkmode]);
 
+  const [selectedText, setSelectedText] = useState('');
+  const [isOneWord, setIsOneWord] = useState(false);
+  const [oneWordData, setOneWOrdData] = useState(null);
   useEffect(() => {
-    if (rendiRef.current) {
-      rendiRef.current.themes.fontSize(config.fontSize + 'px');
-      rendiRef.current.manager.clear();
-      rendiRef.current.display(page.cfi);
-    }
-    // eslint-disable-next-line
-  }, [config.fontSize]);
-
-  useEffect(() => {
-    if (rendiRef.current) {
-      const windy = window;
-      rendiRef.current.themes.default({
-        body: { color: config.color },
-      });
-      const background = {
-        type: 'BACKGROUND',
-        value: config.bg,
-      };
-      windy.ReactNativeWebView &&
-        windy.ReactNativeWebView.postMessage(JSON.stringify(background));
-    }
-    // eslint-disable-next-line
-  }, [config]);
-
-  const [lists, setLists] = useState({
-    annotations: [], // BOOKMARKS + ANNOTATIONS,
-    search: [],
-  });
-
-  const [bookmarkedPages, setBookmarkedPages] = useState([]);
-  useEffect(() => {
-    if (lists.annotations) {
-      let list = [];
-
-      lists.annotations?.map((item, index) => {
-        if (item.type === 'BOOKMARK') {
-          list.push(parseInt(item.pageNumber));
-        }
-        return true;
-      });
-      setBookmarkedPages(list);
-    }
-  }, [lists.annotations]);
-
-  const [x, setX] = useState(0);
-  const [y, setY] = useState(0);
-  const [show, setShow] = useState({
-    search: false,
-    annotation: false,
-    config: false,
-    scroll: false,
-    toc: false,
-    popup: false,
-    nightMode: false,
-  });
-  const annRef = useRef(lists.annotations);
-  const [cfi, setCfi] = useState({
-    range: '',
-    page: '',
-  });
-  const [marked, setMarked] = useState(false);
-  const [sharedData, setShared] = useState({
-    token: '',
-    paper: '',
-    annotation: '',
-  });
-  useEffect(() => {
-    const getPosition = () => {
-      var posy = 0;
-      let posx = 0;
-      let selection;
-      let iframeBody = document.getElementsByTagName('iframe');
-      for (var i = 0, len = iframeBody.length; i < len; i++) {
-        var doc = iframeBody[i]?.contentWindow?.document;
-        const sel = doc?.getSelection();
-        if (sel.type === 'None') continue;
-        selection = sel;
-      }
-      if (selection) {
-        let range = selection.getRangeAt(0).cloneRange();
-        if (!range.getClientRects) return;
-        posy = range.getClientRects().item(0).y;
-        posx = range.getClientRects().item(0).x;
-        if (
-          selection?.toString().length === 0 ||
-          selection?.toString().replace(/\s/g, '').length === 0
-        )
-          return;
-
-        let x = posx > window.innerWidth ? posx % window.innerWidth : posx;
-        let y = posy > window.innerHeight ? posy % window.innerHeight : posy;
-        setX(x);
-        setY(y + 30);
-        handleShow('popup', true);
-      }
-    };
-
-    const handleShow = (key, value) => {
-      let x = { ...show };
-      if (key === 'popup') {
-        x['annotation'] = false;
-      }
-      x[key] = value;
-
-      setShow(x);
-    };
-
-    const handleMarked = (cfiRange, rendi, list) => {
-      // check if same chapter
-      // check if same pathComponent
-      // check if cfiRange is within item.epubcfi
-      let chapt1 = rendi.epubcfi.getChapterComponent(cfiRange);
-      let path1 = rendi.epubcfi.getPathComponent(cfiRange);
-      let range1 = rendi.epubcfi.getRange(cfiRange);
-      let x = [...list];
-      let _cfi = null;
-      x.map((item, index) => {
-        let chapt2 = rendi.epubcfi.getChapterComponent(item.epubCfi);
-        let path2 = rendi.epubcfi.getPathComponent(item.epubCfi);
-        let range2 = rendi.epubcfi.getRange(item.epubCfi);
-        console.log(
-          'ranges',
-          cfiRange,
-          item.epubCfi,
-          rendi.epubcfi.parseComponent(cfiRange),
-          rendi.epubcfi.parseComponent(item.epubCfi),
-          path1,
-          path2,
-          range1,
-          range2
+    if (renditionRef.current) {
+      function setRenderSelection(cfiRange, contents) {
+        let text = renditionRef.current.getRange(cfiRange).toString();
+        setSelectedText(text);
+        setSelections(
+          selections.concat({
+            text: renditionRef.current.getRange(cfiRange).toString(),
+            cfiRange,
+          })
         );
-        // if (
-        //  chapt1 === chapt2
-        // ) {
-        //   setMarked(true);
-        //   _cfi = item.epubCfi;
-        //   item.note && setNote(item.note);
-        // }
-      });
-      return _cfi;
-      // let x: Array<any> = [...lists.annotations];
-      // let inde = x.findIndex((item) => {
-      //   if (item.type === "HIGHLIGHT") {
-      //     if (item.epubCfi === _cfi) return true;
-      //   } else {
-      //     return false;
-      //   }
-      // });
-      // if (inde !== -1) {
-      //   x[inde].note && setNote(x[inde].note);
-      // }
-    };
-    const handleCFI = (key, value) => {
-      let x = { ...cfi };
-      x[key] = value;
-
-      setCfi(x);
-    };
-    const setAnnotations = (token, paper, rendi) => {
-      // services
-      //   .getAnn(token, paper)
-      //   .then((response) => {
-      //     // alert(
-      //     //   `ann fetch - ${response.status} = ${response.data} - ${response}`
-      //     // );
-      //     const annData = response.data.ann;
-      //     let data: any = [];
-      //     annData.map((item: any, index: number) => {
-      //       delete item._id;
-      //       data.push(item);
-      //       return true;
-      //     });
-      //     setShared({
-      //       token: token,
-      //       paper: paper,
-      //       annotation: response.data._id,
-      //     });
-      //     setAnn(data);
-      //     data.map((item: any, index: number) => {
-      //       showAnn(item.epubCfi, item.text, item.color, rendi);
-      //       return true;
-      //     });
-      //   })
-      //   .catch((error) => alert(`ann fetch error - ${error}`));
-    };
-    if (rendiRef.current) {
-      rendiRef.current.on('selected', (cfiRange, content) => {
-        getPosition();
-        let newCfi = handleMarked(cfiRange, rendiRef.current, annRef.current);
-        if (newCfi !== null) {
-          handleCFI('range', newCfi);
-        } else {
-          handleCFI('range', cfiRange);
-        }
-        content.window.getSelection().removeAllRanges();
-      });
-
-      rendiRef.current.on('relocated', function (location) {
-        // var percent = book.locations.percentageFromCfi(location.start.cfi);
-
-        let current = location.start.displayed.page;
-        let total = location.end.displayed.total;
-        var percentage = Math.floor((current / total) * 100);
-        setPage({
-          current:
-            location.atEnd === true
-              ? location.end.displayed.page
-              : location.start.displayed.page,
-          total: location.end.displayed.total,
-          cfi: location.start.cfi,
-          percentage: location.atEnd === true ? 'the end' : percentage,
-        });
-      });
-
-      rendiRef.current.on('markClicked', (_cfi, data, content) => {
-        let selection = content.document.getSelection();
-        let range = selection.getRangeAt(0).cloneRange();
-        if (!range.getClientRects) return;
-        let posy = range.getClientRects().item(0).y;
-        let posx = range.getClientRects().item(0).x;
-        setMarked(true);
-        handleCFI('range', _cfi);
-        let x = posx > window.innerWidth ? posx % window.innerWidth : posx;
-        setX(x);
-        setY(posy + 30);
-        handleShow('popup', true);
-      });
-
-      if (window.URI && window.token && window.paper) {
-        setShared({
-          token: window.token,
-          paper: window.paper,
-          annotation: '',
-        });
-        setAnnotations(window.token, window.paper, rendiRef.current);
       }
+      renditionRef.current.on('selected', setRenderSelection);
+      if (selectedText.length > 0) {
+        if (selectedText.length < 130) {
+          let spaceCount = selectedText.split(' ').length - 1;
+          if (spaceCount === 0) {
+            setIsOneWord(true);
+            setModalLoader(true);
+          } else {
+            setIsOneWord(false);
+            setModalLoader(false);
+          }
+          setTimeout(() => {
+            setShowModal(true);
+          }, 2000);
+        }
+      }
+      return () => {
+        renditionRef.current.off('selected', setRenderSelection);
+      };
     }
-  }, [rendiRef.current]);
+  }, [setSelections, selections, selectedText]);
+  const [showModal, setShowModal] = useState(false);
+  const [modalLoader, setModalLoader] = useState(false);
+  useEffect(() => {
+    async function SingleWord() {
+      console.log(TOKEN);
+      try {
+        if (TOKEN) {
+          setModalLoader(true);
+          var data = JSON.stringify({
+            word: selectedText,
+          });
+          var config = {
+            method: 'post',
+            url: SINGLE_WORD,
+            headers: {
+              Authorization: `Bearer ${TOKEN}`,
+              'Content-Type': 'application/json',
+            },
+            data: data,
+          };
+          axios(config)
+            .then(function (response) {
+              console.log(response.data);
+              setOneWOrdData(response.data);
+              setModalLoader(false);
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        }
+      } catch (error) {}
+    }
+    if (isOneWord) {
+      SingleWord();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOneWord]);
 
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     if (window.URI && window.token && window.paper) {
-  //       setUrl(window.URI);
-  //     }
-  //   }, 300);
-  // }, []);
+  const TexttoSpeech = async (text) => {
+    return true;
+  };
 
+  const TranslateText = async (text) => {
+    return true;
+  };
+
+  const AddtoPhrase = async (text) => {
+    return true;
+  };
   return (
     <React.Fragment>
-      {URL === 'null' || URL === null ? (
-        <div>
-          <input
-            value={tmpUrl}
-            onChange={(e) => {
-              setTmpUrl(e.target.value);
+      <div style={{ background: darkmode ? '#000' : '#fff' }}>
+        {URL === 'null' || URL === null ? (
+          <div>
+            <input
+              value={tmpUrl}
+              onChange={(e) => {
+                setTmpUrl(e.target.value);
+              }}
+            />
+            <button onClick={() => setURL(tmpUrl)}>Submit</button>
+          </div>
+        ) : (
+          <div
+            className='App'
+            style={{
+              position: 'relative',
+              height: '100vh',
+              background: darkmode ? '#000' : '#fff',
             }}
-          />
-          <button onClick={() => setURL(tmpUrl)}>Submit</button>
-        </div>
-      ) : (
-        <div>
-          <ReactEpubViewer
-            url={URL}
-            ref={viewerRef}
-            style={{ height: '85vh', marginTop: '6vh' }}
-            epubOptions={{
-              resizeOnOrientationChange: true,
-              spread: 'auto',
-              flow: 'paginated',
-            }}
-            rendtionChanged={(rendition) => {
-              console.log('rendi', rendition);
-              rendiRef.current = rendition;
-              setRendition(rendition);
-            }}
-          />
-          <BottomBar
-            onNext={() => rendiRef.current && rendiRef.current.next()}
-            onPrev={() => rendiRef.current && rendiRef.current.prev()}
-            page={{
-              current: page.current,
-              total: page.total,
-              percentage: page.percentage,
-            }}
-            scroll={scroll}
-          />
-        </div>
-      )}
+          >
+            <ReactReader
+              location={location}
+              locationChanged={locationChanged}
+              url={URL}
+              styles={ownStyles}
+              showToc={true}
+              getRendition={(rendition) => {
+                renditionRef.current = rendition;
+                renditionRef.current.themes.fontSize(`${size}%`);
+                renditionRef.current.themes.register('theme', {
+                  body: {
+                    color: darkmode ? '#fff' : '#000',
+                    background: darkmode ? '#000' : '#fff',
+                  },
+                });
+                renditionRef.current.themes.select('theme');
+                setSelections([]);
+              }}
+              tocChanged={(toc) => (tocRef.current = toc)}
+            />
+            <div
+              style={{
+                marginTop: -5,
+                textAlign: 'center',
+                zIndex: 1,
+                background: darkmode ? '#000' : '#fff',
+              }}
+            >
+              <hr />
+              <button
+                onClick={() => changeSize(Math.max(80, size - 10))}
+                style={{
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                  paddingTop: 2,
+                  paddingBottom: 2,
+                  marginRight: 20,
+                }}
+                disabled={size <= 80 ? true : false}
+              >
+                <span
+                  style={{ color: size <= 80 ? '#ccc' : 'blue', fontSize: 20 }}
+                >
+                  -
+                </span>
+              </button>
+
+              <span
+                style={{
+                  borderColor: '#ccc',
+                  borderStyle: 'solid',
+                  paddingLeft: 30,
+                  paddingRight: 30,
+                  paddingTop: 5,
+                  paddingBottom: 5,
+                  color: darkmode ? '#fff' : '#000',
+                }}
+              >
+                Text Size
+              </span>
+              <button
+                onClick={() => changeSize(Math.min(200, size + 10))}
+                style={{
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                  paddingTop: 2,
+                  paddingBottom: 2,
+                  marginLeft: 20,
+                  marginBottom: 10,
+                }}
+                disabled={size >= 200 ? true : false}
+              >
+                <span
+                  style={{ color: size >= 200 ? '#ccc' : 'blue', fontSize: 20 }}
+                >
+                  +
+                </span>
+              </button>
+              <br />
+              <button
+                onClick={() => renditionRef.current.prev()}
+                style={{
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                  paddingTop: 2,
+                  paddingBottom: 2,
+                  marginLeft: 20,
+                  marginBottom: 10,
+                }}
+              >
+                {' '}
+                <IoArrowBack />
+              </button>
+              <button
+                onClick={() => renditionRef.current.next()}
+                style={{
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                  paddingTop: 2,
+                  paddingBottom: 2,
+                  marginLeft: 20,
+                  marginBottom: 10,
+                }}
+              >
+                {' '}
+                <IoArrowForward />
+              </button>
+              <br />
+              <span>{page}</span>
+            </div>
+          </div>
+        )}
+      </div>
+      <div>
+        <Modal
+          open={showModal}
+          onClose={() => {
+            setShowModal(false);
+            setSelectedText('');
+          }}
+          center={true}
+        >
+          <div style={{ flex: 1, width: width / 1.5 }}>
+            <div
+              style={{ marginLeft: 'auto', marginRight: 'auto', width: '20%' }}
+            >
+              <Loader
+                type='Circles'
+                color='#00BFFF'
+                height={30}
+                width={30}
+                visible={modalLoader}
+              />
+            </div>
+            <div>
+              <span
+                style={{
+                  fontWeight: '500',
+                  color: '#989AA0',
+                  display: 'block',
+                }}
+              >
+                Selected Text
+              </span>
+              <span
+                style={{ display: 'block', marginTop: 10, marginBottom: 10 }}
+              >
+                {selectedText}
+              </span>
+              <div style={{ flexDirection: 'row' }}>
+                <IoVolumeOff
+                  style={{ fontSize: 30, marginInlineEnd: 10 }}
+                  onClick={TexttoSpeech}
+                />
+                <MdTranslate
+                  style={{ fontSize: 30, marginInlineEnd: 10 }}
+                  onClick={TranslateText}
+                />
+                <VscSaveAs
+                  style={{ fontSize: 30, marginInlineEnd: 10 }}
+                  onClick={AddtoPhrase}
+                />
+              </div>
+              {oneWordData && <div> One Word Data</div>}
+            </div>
+          </div>
+        </Modal>
+      </div>
     </React.Fragment>
   );
 };
+
 export default Reader;
