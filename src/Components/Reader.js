@@ -5,13 +5,13 @@ import { IoArrowBack, IoArrowForward } from 'react-icons/io5';
 import { IoVolumeOff } from 'react-icons/io5';
 import { MdTranslate } from 'react-icons/md';
 import { VscSaveAs } from 'react-icons/vsc';
-
+import 'react-responsive-modal/styles.css';
 import { Modal } from 'react-responsive-modal';
 import axios from 'axios';
-import '../../node_modules/react-responsive-modal/styles.css';
 import Loader from 'react-loader-spinner';
 import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
 import useWindowDimensions from '../hooks/useWindowDimensions';
+import Speech from 'speak-tts';
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
@@ -25,7 +25,11 @@ const ownStyles = {
 };
 const SINGLE_WORD = 'http://18.216.248.41/api/v1/word/single/words';
 const Reader = () => {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const [open, setOpen] = useState(false);
+  const onOpenModal = () => setOpen(true);
+  const onCloseModal = () => setOpen(false);
+  const [modalLoader, setModalLoader] = useState(false);
   const [tmpUrl, setTmpUrl] = useState('');
   const [selections, setSelections] = useState([]);
   const renditionRef = useRef(null);
@@ -62,22 +66,21 @@ const Reader = () => {
     } catch (error) {}
   }, [size]);
 
-  // eslint-disable-next-line no-unused-vars
-  const [darkmode, setDarkmode] = useState(false);
-
+  const [backgroundColor, setBackgroundColor] = useState('#fff');
+  const [textColor, setTextColor] = useState('#000');
   useEffect(() => {
     try {
       if (renditionRef.current) {
         renditionRef.current.themes.register('theme', {
           body: {
-            color: darkmode ? '#fff' : '#000',
-            background: darkmode ? '#000' : '#fff',
+            color: textColor,
+            background: backgroundColor,
           },
         });
         renditionRef.current.themes.select('theme');
       }
     } catch (error) {}
-  }, [darkmode]);
+  }, [backgroundColor, textColor]);
 
   const [selectedText, setSelectedText] = useState('');
   const [isOneWord, setIsOneWord] = useState(false);
@@ -95,9 +98,15 @@ const Reader = () => {
         );
       }
       renditionRef.current.on('selected', setRenderSelection);
-      if (selectedText.length > 0) {
-        if (selectedText.length < 130) {
-          let spaceCount = selectedText.split(' ').length - 1;
+
+      if (selectedText) {
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(
+            JSON.stringify({ type: 'selected', selectedText })
+          );
+        }
+        if (selectedText.length > 0 && selectedText.length < 130) {
+          let spaceCount = selectedText.trim().split(' ').length - 1;
           if (spaceCount === 0) {
             setIsOneWord(true);
             setModalLoader(true);
@@ -105,21 +114,20 @@ const Reader = () => {
             setIsOneWord(false);
             setModalLoader(false);
           }
-          setTimeout(() => {
-            setShowModal(true);
-          }, 2000);
         }
+        setTimeout(() => {
+          onOpenModal();
+        }, 2000);
       }
+
       return () => {
         renditionRef.current.off('selected', setRenderSelection);
       };
     }
   }, [setSelections, selections, selectedText]);
-  const [showModal, setShowModal] = useState(false);
-  const [modalLoader, setModalLoader] = useState(false);
+
   useEffect(() => {
     async function SingleWord() {
-      console.log(TOKEN);
       try {
         if (TOKEN) {
           setModalLoader(true);
@@ -137,14 +145,15 @@ const Reader = () => {
           };
           axios(config)
             .then(function (response) {
-              console.log(response.data);
               setOneWOrdData(response.data);
               setModalLoader(false);
             })
             .catch(function (error) {
               console.log(error);
+              setModalLoader(false);
             });
         }
+        setModalLoader(true);
       } catch (error) {}
     }
     if (isOneWord) {
@@ -153,20 +162,128 @@ const Reader = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOneWord]);
 
-  const TexttoSpeech = async (text) => {
-    return true;
+  const speech = new Speech();
+  useEffect(() => {
+    speech
+      .init({
+        volume: 0.5,
+        lang: 'en-GB',
+        rate: 1,
+        pitch: 1,
+      })
+      .then((data) => {})
+      .catch((e) => {
+        console.error('An error occured while initializing : ', e);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const TexttoSpeech = async () => {
+    let text = selectedText;
+    speech
+      .speak({
+        text,
+        queue: false,
+        listeners: {
+          onstart: () => {},
+          onend: () => {},
+          onresume: () => {},
+        },
+      })
+      .then((data) => {})
+      .catch((e) => {});
   };
 
+  const [translatedText, setTranslatedText] = useState('');
   const TranslateText = async (text) => {
+    setModalLoader(true);
+    setTimeout(() => {
+      setModalLoader(false);
+      setTranslatedText('कल्पना');
+    }, 2000);
     return true;
   };
 
   const AddtoPhrase = async (text) => {
+    setModalLoader(true);
+    setTimeout(() => {
+      setModalLoader(false);
+    }, 2000);
     return true;
   };
+
+  function OneWordData(props) {
+    return (
+      <div
+        style={{
+          borderStyle: 'solid',
+          borderWidth: 0.2,
+          borderColor: '#ccc',
+          paddingLeft: 20,
+          paddingRight: 20,
+          paddingTop: 5,
+          paddingBottom: 5,
+        }}
+      >
+        <div style={{ marginBottom: 5 }}>
+          <span style={{ fontWeight: '500', color: '#989AA0', marginRight: 5 }}>
+            Pos:
+          </span>
+          <span style={{ color: '#000', fontWeight: 'bold' }}>
+            {props.data.pos}
+          </span>
+        </div>
+        <div style={{ marginBottom: 5 }}>
+          <span style={{ fontWeight: '500', color: '#989AA0', marginRight: 5 }}>
+            Translation:
+          </span>
+          <span style={{ color: '#000', fontWeight: 'bold' }}>
+            {props.data.translation}
+          </span>
+        </div>
+        <div>
+          {props.data.meanings.map((meaning, index) => (
+            <div key={index}>
+              <div style={{ marginBottom: 5 }}>
+                <span
+                  style={{
+                    fontWeight: '500',
+                    color: '#989AA0',
+                    marginRight: 5,
+                  }}
+                >
+                  Meaning:
+                </span>
+                <span>{meaning.meanings}</span>
+              </div>
+              <div style={{ marginBottom: 5 }}>
+                <span
+                  style={{
+                    fontWeight: '500',
+                    color: '#989AA0',
+                    marginRight: 5,
+                  }}
+                >
+                  Usage:
+                </span>
+                <span>{meaning.sentence_usage}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  useEffect(() => {
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(
+        JSON.stringify({ type: 'test', message: 'Helo World' })
+      );
+    }
+  }, []);
   return (
     <React.Fragment>
-      <div style={{ background: darkmode ? '#000' : '#fff' }}>
+      <div style={{ background: backgroundColor }}>
         {URL === 'null' || URL === null ? (
           <div>
             <input
@@ -182,8 +299,8 @@ const Reader = () => {
             className='App'
             style={{
               position: 'relative',
-              height: '100vh',
-              background: darkmode ? '#000' : '#fff',
+              height: height - 150,
+              background: backgroundColor,
             }}
           >
             <ReactReader
@@ -197,8 +314,8 @@ const Reader = () => {
                 renditionRef.current.themes.fontSize(`${size}%`);
                 renditionRef.current.themes.register('theme', {
                   body: {
-                    color: darkmode ? '#fff' : '#000',
-                    background: darkmode ? '#000' : '#fff',
+                    color: textColor,
+                    background: backgroundColor,
                   },
                 });
                 renditionRef.current.themes.select('theme');
@@ -211,7 +328,7 @@ const Reader = () => {
                 marginTop: -5,
                 textAlign: 'center',
                 zIndex: 1,
-                background: darkmode ? '#000' : '#fff',
+                background: backgroundColor,
               }}
             >
               <hr />
@@ -241,7 +358,7 @@ const Reader = () => {
                   paddingRight: 30,
                   paddingTop: 5,
                   paddingBottom: 5,
-                  color: darkmode ? '#fff' : '#000',
+                  color: textColor,
                 }}
               >
                 Text Size
@@ -276,7 +393,6 @@ const Reader = () => {
                   marginBottom: 10,
                 }}
               >
-                {' '}
                 <IoArrowBack />
               </button>
               <button
@@ -290,70 +406,189 @@ const Reader = () => {
                   marginBottom: 10,
                 }}
               >
-                {' '}
                 <IoArrowForward />
               </button>
               <br />
-              <span>{page}</span>
+              <button
+                style={{
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                  paddingTop: 2,
+                  paddingBottom: 2,
+                  marginLeft: 20,
+                  marginBottom: 10,
+                  background: '#fff',
+                }}
+                onClick={() => {
+                  setBackgroundColor('#fff');
+                  setTextColor('#000');
+                }}
+                disabled={false}
+              >
+                <span
+                  style={{
+                    textAlign: 'center',
+                    fontWeight: 'bolder',
+                    color: '#000',
+                    fontSize: 18,
+                  }}
+                >
+                  Aa
+                </span>
+              </button>
+              <button
+                style={{
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                  paddingTop: 2,
+                  paddingBottom: 2,
+                  marginLeft: 20,
+                  marginBottom: 10,
+                  background: '#ccc',
+                }}
+                onClick={() => {
+                  setBackgroundColor('#ccc');
+                  setTextColor('#000');
+                }}
+                disabled={false}
+              >
+                <span
+                  style={{
+                    textAlign: 'center',
+                    fontWeight: 'bolder',
+                    color: '#000',
+                    fontSize: 18,
+                  }}
+                >
+                  Aa
+                </span>
+              </button>
+              <button
+                style={{
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                  paddingTop: 2,
+                  paddingBottom: 2,
+                  marginLeft: 20,
+                  marginBottom: 10,
+                  background: '#000',
+                }}
+                onClick={() => {
+                  setBackgroundColor('#000');
+                  setTextColor('#fff');
+                }}
+                disabled={false}
+              >
+                <span
+                  style={{
+                    textAlign: 'center',
+                    fontWeight: 'bolder',
+                    color: '#fff',
+                    fontSize: 18,
+                  }}
+                >
+                  Aa
+                </span>
+              </button>
+              <br />
+              <span style={{ color: textColor }}>{page}</span>
             </div>
           </div>
         )}
       </div>
-      <div>
-        <Modal
-          open={showModal}
-          onClose={() => {
-            setShowModal(false);
-            setSelectedText('');
-          }}
-          center={true}
-        >
-          <div style={{ flex: 1, width: width / 1.5 }}>
-            <div
-              style={{ marginLeft: 'auto', marginRight: 'auto', width: '20%' }}
+      <Modal
+        open={open}
+        center
+        onClose={() => {
+          onCloseModal();
+          setSelectedText('');
+          setIsOneWord(false);
+          setOneWOrdData(null);
+          setTranslatedText('');
+        }}
+      >
+        <div style={{ flex: 1, width: width / 1.5 }}>
+          <div
+            style={{
+              marginLeft: 'auto',
+              marginRight: 'auto',
+              width: '20%',
+            }}
+          >
+            <Loader
+              type='Circles'
+              color='#00BFFF'
+              height={30}
+              width={30}
+              visible={modalLoader}
+            />
+          </div>
+          <div>
+            <span
+              style={{
+                fontWeight: '500',
+                color: '#989AA0',
+                display: 'block',
+              }}
             >
-              <Loader
-                type='Circles'
-                color='#00BFFF'
-                height={30}
-                width={30}
-                visible={modalLoader}
+              Selected Text
+            </span>
+            <span style={{ display: 'block', marginTop: 10, marginBottom: 10 }}>
+              {selectedText}
+            </span>
+            <div style={{ flexDirection: 'row' }}>
+              <IoVolumeOff
+                style={{
+                  fontSize: 30,
+                  marginInlineEnd: 10,
+                  cursor: 'pointer',
+                }}
+                onClick={TexttoSpeech}
+              />
+              <MdTranslate
+                style={{
+                  fontSize: 30,
+                  marginInlineEnd: 10,
+                  cursor: 'pointer',
+                }}
+                onClick={TranslateText}
+              />
+              <VscSaveAs
+                style={{
+                  fontSize: 30,
+                  marginInlineEnd: 10,
+                  cursor: 'pointer',
+                }}
+                onClick={AddtoPhrase}
               />
             </div>
-            <div>
-              <span
-                style={{
-                  fontWeight: '500',
-                  color: '#989AA0',
-                  display: 'block',
-                }}
-              >
-                Selected Text
-              </span>
-              <span
-                style={{ display: 'block', marginTop: 10, marginBottom: 10 }}
-              >
-                {selectedText}
-              </span>
-              <div style={{ flexDirection: 'row' }}>
-                <IoVolumeOff
-                  style={{ fontSize: 30, marginInlineEnd: 10 }}
-                  onClick={TexttoSpeech}
-                />
-                <MdTranslate
-                  style={{ fontSize: 30, marginInlineEnd: 10 }}
-                  onClick={TranslateText}
-                />
-                <VscSaveAs
-                  style={{ fontSize: 30, marginInlineEnd: 10 }}
-                  onClick={AddtoPhrase}
-                />
+            <br />
+            {translatedText && translatedText.length > 1 && (
+              <div>
+                <span
+                  style={{
+                    fontWeight: '500',
+                    color: '#989AA0',
+                    marginRight: 5,
+                  }}
+                >
+                  Translation:
+                </span>
+                <span style={{ color: '#000', fontWeight: 'bold' }}>
+                  {translatedText}
+                </span>
               </div>
-              {oneWordData && <div> One Word Data</div>}
-            </div>
+            )}
+            {oneWordData && (
+              <React.Fragment>
+                {oneWordData.map((_data) => {
+                  return <OneWordData key={Math.random(1000)} data={_data} />;
+                })}
+              </React.Fragment>
+            )}
           </div>
-        </Modal>
-      </div>
+        </div>
+      </Modal>
     </React.Fragment>
   );
 };

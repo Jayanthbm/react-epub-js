@@ -15,6 +15,7 @@
     "react-responsive-modal": "^6.1.0",
     "react-router-dom": "^5.3.0",
     "react-scripts": "4.0.3",
+    "speak-tts": "^2.0.8",
     "web-vitals": "^1.0.1"
   },
   "scripts": {
