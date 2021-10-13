@@ -102,7 +102,7 @@ const Reader = () => {
       if (selectedText) {
         if (window.ReactNativeWebView) {
           window.ReactNativeWebView.postMessage(
-            JSON.stringify({ type: 'selected', selectedText })
+            JSON.stringify({ type: 'selected', text: selectedText })
           );
         }
         if (selectedText.length > 0 && selectedText.length < 130) {
@@ -496,7 +496,7 @@ const Reader = () => {
           </div>
         )}
       </div>
-      <Modal
+      {/* <Modal
         open={open}
         center
         onClose={() => {
@@ -588,7 +588,7 @@ const Reader = () => {
             )}
           </div>
         </div>
-      </Modal>
+      </Modal> */}
     </React.Fragment>
   );
 };
