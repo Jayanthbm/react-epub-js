@@ -1,5 +1,32 @@
-http://18.216.248.41/api/v1/word/single/words
+https://synclishbucket.s3.amazonaws.com/books/chapters/epub/90_5195_1.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020009Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=2044dfcad07f5203d3e5c24490fbe0e3b6446804e08ae5402f4ff190f7649905
 
 
+https://synclishbucket.s3.amazonaws.com/books/chapters/epub/91_5195_2.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020009Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=e160a9b2b503c004a300ab5d2c7b45dd57484a9b5c65a82214412ab412ab9971
 
-eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtaW5ha3NoaSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIiwiaWF0IjoxNjMzODQ4MzExLCJuYmYiOjE2MzM4NDgzMTEsImp0aSI6IjU1MjJiZDkyLWI1ZjItNDQwNi1iODUwLTBkNTMyNGFlMTdiMyIsImV4cCI6MTYzNDQ1MzExMSwidHlwZSI6ImFjY2VzcyIsImZyZXNoIjpmYWxzZSwiaW5zdGl0dXRpb25faWQiOjEyLCJzdHVkZW50X2NsYXNzIjoiMTAifQ.UxHkjz7lf2rKB9-x5wWRe7dw0Pa-EkO_hNvPcZ_Z9Eg
+
+https://synclishbucket.s3.amazonaws.com/books/chapters/epub/92_5195_3.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020009Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=b15fbd7af1c73a6ec09d01e98e2b18d61619e56fb902f90c285d2af4be15d448
+
+
+https://synclishbucket.s3.amazonaws.com/books/chapters/epub/93_5195_4.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020009Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=a567a2ba5c44e182c098e4dae592ae1d9be071ffc10fed8cc705a053c194b503
+
+
+https://synclishbucket.s3.amazonaws.com/books/chapters/epub/94_5195_5.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020009Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=1bb0ab77297b796596fb5b082831d837f11636673cc05c33b6d37c5ac64ed978
+
+
+https://synclishbucket.s3.amazonaws.com/books/chapters/epub/95_5195_6.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020009Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=7edc4bba7ae9f9c9e3e2dcaa772e497c3ff130698888b9b00a05747bdcc0a21e
+
+
+https://synclishbucket.s3.amazonaws.com/books/chapters/epub/96_5195_7.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020009Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=f1087c87578d92e838d6e0cebb9b3fce5656a78cc0963782bb54905b49ca6ae6
+
+https://synclishbucket.s3.amazonaws.com/books/chapters/epub/97_5195_8.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020009Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=df489234605a5a1cbf143b20d3b18cb6b0b50116bb7df6c11fa5debc251cd9f6
+
+
+https://synclishbucket.s3.amazonaws.com/books/chapters/epub/98_5195_9.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020009Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=9df8b1f30af8c3e4f6cbb3dcf281cc181f5d9981a890d826b84ff26ee7f42bdd
+
+
+https://synclishbucket.s3.amazonaws.com/books/chapters/epub/99_5195_10.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020009Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=7c4f73d838d24a18aeab06eab05d25f6dfad84b110c647e7014d6bd7508f1579
+
+
+https://synclishbucket.s3.amazonaws.com/books/epub/pg17157-images.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020248Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=d1feb85722ab92556d1104f209b114407e8914e22b1121afa0d5f7137dd80bdb
+
+https://synclishbucket.s3.amazonaws.com/books/chapters/epub/54_5218_1.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA6CCBKAB37BJQHLBW%2F20211014%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20211014T020337Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=ea9c567b9045ae5b538e31923fa5f15f314b57d52252755b92dbab2afbc39410

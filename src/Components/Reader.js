@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ReactReader, ReactReaderStyle } from 'react-reader';
 import { IoArrowBack, IoArrowForward } from 'react-icons/io5';
-import 'react-responsive-modal/styles.css';
 import useWindowDimensions from '../hooks/useWindowDimensions';
 
 function useQuery() {
@@ -19,7 +18,6 @@ const ownStyles = {
 const Reader = () => {
   const { height } = useWindowDimensions();
   const [tmpUrl, setTmpUrl] = useState('');
-  const [selections, setSelections] = useState([]);
   const renditionRef = useRef(null);
   const tocRef = useRef(null);
   let query = useQuery();
@@ -66,6 +64,14 @@ const Reader = () => {
           },
         });
         renditionRef.current.themes.select('theme');
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(
+            JSON.stringify({ type: 'backgroundColor', value: backgroundColor })
+          );
+          window.ReactNativeWebView.postMessage(
+            JSON.stringify({ type: 'textColor', value: textColor })
+          );
+        }
       }
     } catch (error) {}
   }, [backgroundColor, textColor]);
@@ -76,19 +82,13 @@ const Reader = () => {
       function setRenderSelection(cfiRange, contents) {
         let text = renditionRef.current.getRange(cfiRange).toString();
         setSelectedText(text);
-        setSelections(
-          selections.concat({
-            text: renditionRef.current.getRange(cfiRange).toString(),
-            cfiRange,
-          })
-        );
       }
       renditionRef.current.on('selected', setRenderSelection);
 
       if (selectedText) {
         if (window.ReactNativeWebView) {
           window.ReactNativeWebView.postMessage(
-            JSON.stringify({ type: 'selected', text: selectedText })
+            JSON.stringify({ type: 'selected', value: selectedText })
           );
         }
       }
@@ -96,7 +96,7 @@ const Reader = () => {
         renditionRef.current.off('selected', setRenderSelection);
       };
     }
-  }, [setSelections, selections, selectedText]);
+  }, [selectedText]);
 
   return (
     <React.Fragment>
@@ -127,6 +127,7 @@ const Reader = () => {
               styles={ownStyles}
               showToc={true}
               getRendition={(rendition) => {
+                console.log(rendition);
                 renditionRef.current = rendition;
                 renditionRef.current.themes.fontSize(`${size}%`);
                 renditionRef.current.themes.register('theme', {
@@ -136,7 +137,6 @@ const Reader = () => {
                   },
                 });
                 renditionRef.current.themes.select('theme');
-                setSelections([]);
               }}
               tocChanged={(toc) => (tocRef.current = toc)}
             />
